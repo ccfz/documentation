@@ -143,7 +143,8 @@ function onMessageReceived(message) {
 ## Integrating Notifee
 
 Integrating Notifee with an FCM payload comes down to personal preference. You could send an entire Notification object
-with the message, or use it to construct your own message.
+with the message, or use it to construct your own message. For iOS, please make sure that you pass `contentAvailable: "true"`as part of
+the data object. Otherwise, iOS will not necessarly wake up your app to display the notification.
 
 Data payloads via the messaging API only accept a string, key/value pairs where the value is always a `string` type. Please bear in mind,
 each property in the `data` object sent via FCM must be a string as noted below.
@@ -157,10 +158,22 @@ Construct an entire notification object directly on the server:
 await admin.messaging().sendMulticast({
   tokens,
   data: {
+    contentAvailable: "true", // vital for ios background notifications to trigger
     notifee: JSON.stringify({
       body: 'This message was sent via FCM!',
       android: {
         channelId: 'default',
+        actions: [
+          {
+            title: 'Mark as Read',
+            pressAction: {
+              id: 'read',
+            },
+          },
+        ],
+      },
+      ios: {
+        categoryId: 'default',
         actions: [
           {
             title: 'Mark as Read',
@@ -199,6 +212,7 @@ await admin.messaging().sendMulticast({
   data: {
     type: 'order_shipped',
     timestamp: Date.now().toString(), // values must be strings!
+    contentAvailable: "true", // vital for ios background notifications to trigger
   },
 });
 ```
@@ -218,6 +232,9 @@ function onMessageReceived(message) {
       android: {
         channelId: 'orders',
       },
+      ios: {
+        categoryId: 'orders'
+      }
     });
   }
 }
